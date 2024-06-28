@@ -1,13 +1,16 @@
 MINIKUBE_SHA256=386eb267e0b1c1f000f1b7924031557402fffc470432dc23b9081fc6962fd69b
-.PHONY: minikube-setup
-minikube-setup:
+minikube-linux-amd64:
 	curl -LO https://github.com/kubernetes/minikube/releases/download/v1.33.1/minikube-linux-amd64
 	SHA256_ACTUAL=`sha256sum minikube-linux-amd64`; \
         case "$$SHA256_ACTUAL" in \
             ($(MINIKUBE_SHA256)\ *) : ok ;; \
             (*) echo minikube checksum mismatch, expected=\"$(MINIKUBE_SHA256)\" actual=\"$$SHA256_ACTUAL\"; \
+            rm minikube-linux-amd64; \
             exit 1 ;; \
         esac
+
+.PHONY: minikube-setup
+minikube-setup: minikube-linux-amd64
 	sudo install minikube-linux-amd64 /usr/local/bin/minikube && rm minikube-linux-amd64
 	minikube start --container-runtime=containerd --docker-opt containerd=/var/run/containerd/containerd.sock
 	minikube addons enable gvisor
