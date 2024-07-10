@@ -1,9 +1,27 @@
 apiVersion: v1
 kind: Pod
 metadata:
-  name: hello-world
+  name: ratls-proxy
 spec:
   runtimeClassName: gvisor
   containers:
-  - name: hello-world
-    image: docker.io/library/hello-world:latest
+  - name: ratls-proxy
+    image: docker.io/library/ratls:786beb0ea21749ae8b9f03d502f44dd31f3e43b1f15ee1abb827a936838d6ada
+    ports:
+    - containerPort: 8080
+
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: simple-key-service
+spec:
+  runtimeClassName: gvisor
+  containers:
+  - name: simple-key-service
+    image: sha256:4697ade8bbf6269002dc8c948ad815febbf24f16267454fcb3a7502e833b76c6
+    ports:
+    - containerPort: 8088
+    envFrom:
+    - secretRef:
+        name: km-autosecret-key-service

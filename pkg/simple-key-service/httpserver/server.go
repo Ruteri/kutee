@@ -39,7 +39,7 @@ type Server struct {
 	metrics *metrics.MetricsServer
 }
 
-func New(cfg *HTTPServerConfig) (srv *Server, err error) {
+func New(cfg *HTTPServerConfig, ksApi *KeyServiceAPI) (srv *Server, err error) {
 	metricsSrv, err := metrics.New(common.PackageName, cfg.MetricsAddr)
 	if err != nil {
 		return nil, err
@@ -48,7 +48,7 @@ func New(cfg *HTTPServerConfig) (srv *Server, err error) {
 	srv = &Server{
 		cfg:     cfg,
 		log:     cfg.Log,
-		ksApi:   NewKeyServiceAPI(),
+		ksApi:   ksApi,
 		srv:     nil,
 		metrics: metricsSrv,
 	}

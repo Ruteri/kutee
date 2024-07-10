@@ -2,11 +2,14 @@ package httpserver
 
 import (
 	"bytes"
+	"crypto/rand"
+	"encoding/hex"
 	"io"
 	"net/http"
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 )
 
 type KuteeAPI struct {
@@ -114,6 +117,12 @@ func (s *KuteeAPI) uploadImageTarball(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *KuteeAPI) startWorkload(w http.ResponseWriter, r *http.Request) {
+	err := s.autogenerateSecrets("workload.yaml")
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
 	cmd := exec.Command("minikube", "kubectl", "--", "apply", "-f", "workload.yaml")
 	if err := cmd.Run(); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -121,4 +130,38 @@ func (s *KuteeAPI) startWorkload(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusOK)
+}
+
+func (s *KuteeAPI) autogenerateSecrets(deploymentFile string) error {
+	// For each km-autosecret_* in deployment create a secret
+
+	data, err := os.ReadFile("workload.yaml")
+	if err != nil {
+		return err
+	}
+
+	autosecrets_to_generate := []string{}
+	lines := strings.Split(string(data), "\n")
+
+	for _, line := range lines {
+		line = strings.TrimSpace(line)
+		if strings.HasPrefix(line, "name: km-autosecret") {
+			autosecrets_to_generate = append(autosecrets_to_generate, line[6:])
+		}
+	}
+
+	for _, autosecret := range autosecrets_to_generate {
+		// TODO: use a persistent, recoverable source of secrets. Cross-attest to fetch the relevant secrets.
+		secret := make([]byte, 32)
+		_, err := rand.Read(secret)
+		if err != nil {
+			return err
+		}
+		cmd := exec.Command("minikube", "kubectl", "--", "create", "secret", "generic", autosecret, "--from-literal", "KM_AUTOSECRET_TOKEN="+hex.EncodeToString(secret))
+		if err := cmd.Run(); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }

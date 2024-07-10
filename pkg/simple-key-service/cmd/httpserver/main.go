@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/hex"
 	"log"
 	"os"
 	"os/signal"
@@ -15,6 +16,12 @@ import (
 )
 
 var flags []cli.Flag = []cli.Flag{
+	&cli.StringFlag{
+		Name:    "km-token",
+		Value:   "",
+		Usage:   "Use autosecret token",
+		EnvVars: []string{"KM_AUTOSECRET_TOKEN"},
+	},
 	&cli.StringFlag{
 		Name:  "listen-addr",
 		Value: "127.0.0.1:8088",
@@ -96,7 +103,20 @@ func main() {
 				WriteTimeout:             30 * time.Second,
 			}
 
-			srv, err := httpserver.New(cfg)
+			var ksApi *httpserver.KeyServiceAPI
+			if token := cCtx.String("km-token"); token != "" {
+				cfg.Log.With("token", token).Info("instantiating ksApi with")
+				seed, err := hex.DecodeString(token)
+				if err != nil {
+					cfg.Log.Error("failed to parse km-token", "err", err)
+					return err
+				}
+				ksApi = httpserver.NewKeyServiceAPIFromSeed(seed)
+			} else {
+				ksApi = httpserver.NewKeyServiceAPI()
+			}
+
+			srv, err := httpserver.New(cfg, ksApi)
 			if err != nil {
 				cfg.Log.Error("failed to create server", "err", err)
 				return err

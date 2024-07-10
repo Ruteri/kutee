@@ -32,6 +32,14 @@ func NewKeyServiceAPI() *KeyServiceAPI {
 	}
 }
 
+func NewKeyServiceAPIFromSeed(seed []byte) *KeyServiceAPI {
+	return &KeyServiceAPI{
+		localSecret:    seed,
+		lock:           sync.Mutex{},
+		derivedPubkeys: make(map[string][]byte),
+	}
+}
+
 type DerivePubkeyRequest struct {
 	ServiceName string   `json:"service_name"`
 	RandomToken [32]byte `json:"random_token"`
