@@ -107,7 +107,7 @@ func main() {
 
 				DrainDuration:            drainDuration,
 				GracefulShutdownDuration: 30 * time.Second,
-				ReadTimeout:              60 * time.Second,
+				ReadTimeout:              360 * time.Second,
 				WriteTimeout:             30 * time.Second,
 
 				BaseImagePath:   cCtx.String("baseimage"),

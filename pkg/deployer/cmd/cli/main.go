@@ -106,19 +106,26 @@ func runDeploy(cCtx *cli.Context) error {
 	// 3. Export all images to the bundle directory
 	image_archives := []string{}
 	for _, image := range images {
-		image_tar_file := bundle_dir + "/" + image
+		colon_escaped_image := strings.ReplaceAll(image, ":", "-")
+		image_tar_file := bundle_dir + "/" + colon_escaped_image + ".tar"
+		// TODO: replace also in the deployment file!
 		err = exec.Command("docker", "image", "save", image, "-o", image_tar_file).Run()
 		if err != nil {
 			panic(err)
 		}
 		image_archives = append(image_archives, image_tar_file)
+
+		err = exec.Command("sed", "-i", "-e", "s/"+image+"/"+colon_escaped_image+"/", bundle_dir+"/deployment.yaml").Run()
+		if err != nil {
+			panic(err)
+		}
 	}
 
 	// 4. Tar the bundle and upload to Tstack server
 	files_to_archive := []string{bundle_dir + "/deployment.yaml"}
 	files_to_archive = append(files_to_archive, image_archives...)
 
-	tar_args := []string{"--create", "-f", "bundle.tar"}
+	tar_args := []string{"--create", "-f", "bundle.tar", "-z"}
 	tar_args = append(tar_args, files_to_archive...)
 
 	err = exec.Command("tar", tar_args...).Run()
@@ -139,7 +146,7 @@ func runDeploy(cCtx *cli.Context) error {
 			errCh <- err
 			return
 		}
-		file, err := os.Open(cCtx.String("bundle.tar"))
+		file, err := os.Open("bundle.tar")
 		if err != nil {
 			log.Error("could not open the file", "err", err)
 			errCh <- err
@@ -168,13 +175,12 @@ func runDeploy(cCtx *cli.Context) error {
 
 		res, err := client.Do(req)
 		if err != nil {
-			log.Error("could not upload image", "err", err)
+			log.Error("could not upload bundle", "err", err)
 			errCh2 <- err
 			return
 		}
 
-		rb, _ := io.ReadAll(res.Body)
-		log.With("resp", rb).With("status", res.Status).Info("requested upload")
+		log.With("status", res.Status).Info("requested upload")
 
 		errCh2 <- nil
 	}()

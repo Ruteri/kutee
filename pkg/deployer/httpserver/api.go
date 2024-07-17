@@ -121,7 +121,7 @@ func (s *DeployerAPI) deploy(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 1. Unpack the bundle archive
-	err = exec.Command("tar", "-x", "-f", bundlePath, tmpDir).Run()
+	err = exec.Command("tar", "-x", "-z", "-f", bundlePath, "-C", tmpDir).Run()
 	if err != nil {
 		s.log.Error("could not unpack bundle", "err", err)
 		http.Error(w, "could not unpack bundle", http.StatusInternalServerError)
@@ -141,19 +141,22 @@ func (s *DeployerAPI) deploy(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 4. Install the unpacked files into the image
-	err = exec.Command("find", tmpDir+"/bundle", "-iname", "*.tar", "-exec", "sudo", "virt-customize", "-a", vmImage, "{}:/kutee/", "\\;").Run()
+	cmd := exec.Command("find", tmpDir+"/bundle/", "-type", "f", "-exec", "sh", "-c", "sudo virt-customize -a "+vmImage+" --copy-in {}:/kutee/", ";")
+	output, err := cmd.CombinedOutput()
 	if err != nil {
-		s.log.Error("could not load images into the baseimage", "err", err)
+		s.log.With("cmd", cmd.String()).With("output", output).Error("could not load images into the baseimage", "err", err)
 		http.Error(w, "could not load images into the baseimage", http.StatusInternalServerError)
 		return
 	}
+	s.log.With("cmd", cmd.String()).With("output", string(output)).Info("installed files into the image")
 
 	// 5. Take the measurement of the image
 
 	// 6. Start the VM
-	cmd := exec.Command("bash", s.RunTdScriptPath)
+	cmd = exec.Command("bash", s.RunTdScriptPath)
+	cmd.Env = os.Environ()
 	cmd.Env = append(cmd.Env, "TD_IMG="+vmImage)
-	output, err := cmd.CombinedOutput()
+	output, err = cmd.CombinedOutput()
 	if err != nil {
 		s.log.With("output", output).Error("could not run the image", "err", err)
 		http.Error(w, "could not run the image", http.StatusInternalServerError)
