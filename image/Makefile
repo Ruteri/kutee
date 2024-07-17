@@ -48,9 +48,6 @@ kutee-image: minikube kutee-orchestrator auth_users.json simple-key-service.tar 
         --copy-in docker-ce-cli-26.deb:/tmp/kutee/ \
         --copy-in minikube:/usr/local/bin/ \
         --copy-in kutee-orchestrator:/usr/local/bin/ \
-        --copy-in simple-key-service.tar:/kutee/ \
-        --copy-in ratls.tar:/kutee/ \
         --copy-in setup.sh:/tmp/kutee/ \
-        --copy-in workload.yaml:/home/tdx/ \
         --run-command "/tmp/kutee/setup.sh"
 	mv /tmp/$(shell basename $(IMAGE_PATH)) .
