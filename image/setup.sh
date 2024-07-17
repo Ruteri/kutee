@@ -18,6 +18,8 @@ minikube start --container-runtime=containerd --docker-opt containerd=/var/run/c
 find /kutee/ -name "*.tar" -exec minikube image load {} \;
 
 minikube addons enable gvisor
+
+cp /kutee/deployment.yaml /home/tdx/workload.yaml
 cd /home/tdx && kutee-orchestrator --listen-addr 0.0.0.0:8087
 EOF
 chmod +x /usr/local/bin/kutee-start
