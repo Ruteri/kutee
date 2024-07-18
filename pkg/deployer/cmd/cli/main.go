@@ -2,6 +2,7 @@ package main
 
 import (
 	"errors"
+	"fmt"
 	"io"
 	"log"
 	"mime/multipart"
@@ -10,7 +11,7 @@ import (
 	"os/exec"
 	"strings"
 
-	"github.com/flashbots/go-template/common"
+	"kutee/common"
 
 	"github.com/urfave/cli/v2" // imports as package "cli"
 )
@@ -109,8 +110,11 @@ func runDeploy(cCtx *cli.Context) error {
 		colon_escaped_image := strings.ReplaceAll(image, ":", "-")
 		image_tar_file := bundle_dir + "/" + colon_escaped_image + ".tar"
 		// TODO: replace also in the deployment file!
-		err = exec.Command("docker", "image", "save", image, "-o", image_tar_file).Run()
+
+		output, err := exec.Command("docker", "image", "save", image, "-o", image_tar_file).CombinedOutput()
 		if err != nil {
+			fmt.Println(exec.Command("docker", "image", "save", image, "-o", image_tar_file).String())
+			fmt.Println(string(output))
 			panic(err)
 		}
 		image_archives = append(image_archives, image_tar_file)

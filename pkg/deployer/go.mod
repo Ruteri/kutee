@@ -1,4 +1,4 @@
-module github.com/flashbots/go-template
+module deployer
 
 go 1.21
 
