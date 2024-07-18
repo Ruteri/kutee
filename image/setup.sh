@@ -14,11 +14,12 @@ cat >/usr/local/bin/kutee-start <<EOF
 #!/bin/bash
 set -e
 minikube start --container-runtime=containerd --docker-opt containerd=/var/run/containerd/containerd.sock
-minikube image load /kutee/simple-key-service.tar
-minikube image load /kutee/ratls.tar
+
+find /kutee/ -name "*.tar" -exec minikube image load {} \;
+
 minikube addons enable gvisor
-docker image load -i /kutee/ratls.tar
-docker run --net host --rm -d ratls /app/ratls -server -target-domain http://localhost -target-port 8087 -listen-port 8080
+
+cp /kutee/deployment.yaml /home/tdx/workload.yaml
 cd /home/tdx && kutee-orchestrator --listen-addr 0.0.0.0:8087
 EOF
 chmod +x /usr/local/bin/kutee-start

@@ -37,7 +37,7 @@ containerd.io-1.6.33.deb:
 
 PWD=$(shell pwd)
 .PHONY: kutee-image
-kutee-image: minikube kutee-orchestrator auth_users.json simple-key-service.tar ratls.tar workload.yaml docker-ce-26.deb containerd.io-1.6.33.deb docker-ce-cli-26.deb
+kutee-image: minikube kutee-orchestrator auth_users.json docker-ce-26.deb containerd.io-1.6.33.deb docker-ce-cli-26.deb
 	install -m 0777 ${IMAGE_PATH} /tmp/$(shell basename $(IMAGE_PATH))
 	$(VIRT_CUSTOMIZE) -a /tmp/$(shell basename $(IMAGE_PATH)) \
         --mkdir /kutee/ \
@@ -48,9 +48,6 @@ kutee-image: minikube kutee-orchestrator auth_users.json simple-key-service.tar 
         --copy-in docker-ce-cli-26.deb:/tmp/kutee/ \
         --copy-in minikube:/usr/local/bin/ \
         --copy-in kutee-orchestrator:/usr/local/bin/ \
-        --copy-in simple-key-service.tar:/kutee/ \
-        --copy-in ratls.tar:/kutee/ \
         --copy-in setup.sh:/tmp/kutee/ \
-        --copy-in workload.yaml:/home/tdx/ \
         --run-command "/tmp/kutee/setup.sh"
 	mv /tmp/$(shell basename $(IMAGE_PATH)) .
