@@ -1,4 +1,4 @@
-module github.com/flashbots/go-template
+module kutee-orchestrator
 
 go 1.21
 

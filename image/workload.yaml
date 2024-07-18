@@ -9,16 +9,3 @@ spec:
     image: docker.io/library/ratls:786beb0ea21749ae8b9f03d502f44dd31f3e43b1f15ee1abb827a936838d6ada
     ports:
     - containerPort: 8080
-
----
-apiVersion: v1
-kind: Pod
-metadata:
-  name: simple-key-service
-spec:
-  runtimeClassName: gvisor
-  containers:
-  - name: simple-key-service
-    image: docker.io/library/simple-key-service:6ceefad1a2eaa6e07cff6be8569f817f890cd115fcd64363d53b47717830e2a1
-    ports:
-    - containerPort: 8088

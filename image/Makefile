@@ -12,10 +12,6 @@ minikube:
 kutee-orchestrator:
 	cd ../pkg/kutee-orchestrator && go build -trimpath -ldflags "-X github.com/flashbots/go-template/common.Version=${VERSION}" -v -o ../../image/kutee-orchestrator cmd/httpserver/main.go
 
-simple-key-service.tar:
-	cd ../pkg/simple-key-service && $(MAKE) docker-httpserver
-	$(DOCKER) image save simple-key-service -o simple-key-service.tar
-
 ratls.tar:
 	docker build -t ratls -f ../pkg/ratls.dockerfile .
 	$(DOCKER) image save ratls -o ratls.tar

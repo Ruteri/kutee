@@ -8,7 +8,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/flashbots/go-template/common"
+	"kutee/common"
+
 	"github.com/stretchr/testify/require"
 )
 
